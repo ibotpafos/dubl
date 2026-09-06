@@ -1,4 +1,4 @@
-# Contributing to Vocal Align
+# Contributing to ДУБЛЬ / DUBL
 
 Thanks for helping make vocal alignment natural and dependable.
 

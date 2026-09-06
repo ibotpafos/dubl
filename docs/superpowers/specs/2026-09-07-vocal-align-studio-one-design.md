@@ -1,4 +1,4 @@
-# Vocal Align — v1 design
+# ДУБЛЬ / DUBL — v1 design
 
 ## Decision
 
@@ -10,7 +10,7 @@ a standalone editor are not included.
 The product goal is a natural one-click result that preserves the character of
 a human double. A conservative result is preferred over an audible artifact.
 
-Vocal Align is initially developed in public under GPL-3.0. This keeps source
+ДУБЛЬ (technical identifier: `dubl`) is initially developed in public under GPL-3.0. This keeps source
 and builds freely available while remaining compatible with JUCE's GPL route.
 Any future proprietary distribution requires a separately approved licensing
 decision for every dependency; it is not in v1 scope.

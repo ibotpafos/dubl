@@ -1,4 +1,4 @@
-# Vocal Align
+# ДУБЛЬ / DUBL
 
 Local-first, open-source alignment of a vocal double to a lead vocal: timing
 and pitch become tighter while vibrato, formants, breaths and human drift stay
@@ -14,7 +14,7 @@ it deliberately does not attempt harmony alignment.
 ## Intended workflow
 
 1. Select a lead event and its vocal doubles in Studio One.
-2. Open Vocal Align as an ARA Event FX.
+2. Open ДУБЛЬ as an ARA Event FX.
 3. Choose `Natural`, `Tight`, or `Locked`, then press `Align All`.
 4. Audition A/B; Studio One retains ownership of persistence and Undo/Restore.
 
