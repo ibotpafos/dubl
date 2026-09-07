@@ -49,7 +49,7 @@ std::string command(const char* executable, const std::filesystem::path& lead,
                     const std::filesystem::path& report) {
   return std::string{"\""} + executable + "\" --lead \"" + lead.string() +
          "\" --double \"" + dub.string() + "\" --output \"" + output.string() +
-         "\" --report \"" + report.string() + "\"";
+         "\" --report \"" + report.string() + "\" --mode locked";
 }
 
 }  // namespace
@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
   REQUIRE(rendered.audio.has_value());
   REQUIRE(rendered.audio->samples.size() == original.audio->samples.size());
   REQUIRE(readAll(report).find("\"schema_version\": 1") != std::string::npos);
+  REQUIRE(readAll(report).find("\"pitch_rendered\": true") != std::string::npos);
+  REQUIRE(readAll(report).find("\"mode\": \"locked\"") != std::string::npos);
   REQUIRE(std::system(invocation.c_str()) != 0);
 
   const auto source_overwrite = command(argv[1], lead, dub, dub, directory / "other.json");

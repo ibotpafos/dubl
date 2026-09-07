@@ -1,14 +1,27 @@
 cmake_minimum_required(VERSION 3.25)
 project(dubl VERSION 0.1.0 LANGUAGES CXX)
 
+include(FetchContent)
+FetchContent_Declare(
+  signalsmith_stretch
+  GIT_REPOSITORY https://github.com/Signalsmith-Audio/signalsmith-stretch.git
+  GIT_TAG 57b93f4e9206a089a45387eaa39bdc9f310d3308
+  GIT_SHALLOW OFF
+)
+FetchContent_MakeAvailable(signalsmith_stretch)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 enable_testing()
 
-add_library(dubl_core STATIC src/wav_reader.cpp src/wav_writer.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp src/time_renderer.cpp)
+add_library(dubl_core STATIC src/wav_reader.cpp src/wav_writer.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp src/time_renderer.cpp src/pitch_decision.cpp)
 target_include_directories(dubl_core PUBLIC include)
+
+add_library(dubl_rendering STATIC src/pitch_renderer.cpp)
+target_include_directories(dubl_rendering PUBLIC include)
+target_link_libraries(dubl_rendering PUBLIC dubl_core PRIVATE signalsmith-stretch)
 
 add_executable(dubl_test_audio_buffer tests/test_audio_buffer.cpp)
 target_link_libraries(dubl_test_audio_buffer PRIVATE dubl_core)
@@ -38,6 +51,14 @@ add_executable(dubl_test_time_renderer tests/test_time_renderer.cpp)
 target_link_libraries(dubl_test_time_renderer PRIVATE dubl_core)
 add_test(NAME dubl_test_time_renderer COMMAND dubl_test_time_renderer)
 
+add_executable(dubl_test_pitch_decision tests/test_pitch_decision.cpp)
+target_link_libraries(dubl_test_pitch_decision PRIVATE dubl_core)
+add_test(NAME dubl_test_pitch_decision COMMAND dubl_test_pitch_decision)
+
+add_executable(dubl_test_pitch_renderer tests/test_pitch_renderer.cpp)
+target_link_libraries(dubl_test_pitch_renderer PRIVATE dubl_rendering)
+add_test(NAME dubl_test_pitch_renderer COMMAND dubl_test_pitch_renderer)
+
 add_executable(dubl_analyse apps/dubl_analyse.cpp)
 target_link_libraries(dubl_analyse PRIVATE dubl_core)
 
@@ -46,7 +67,7 @@ target_link_libraries(dubl_test_cli PRIVATE dubl_core)
 add_test(NAME dubl_test_cli COMMAND dubl_test_cli $<TARGET_FILE:dubl_analyse>)
 
 add_executable(dubl_render apps/dubl_render.cpp)
-target_link_libraries(dubl_render PRIVATE dubl_core)
+target_link_libraries(dubl_render PRIVATE dubl_rendering)
 
 add_executable(dubl_test_render_cli tests/test_render_cli.cpp)
 target_link_libraries(dubl_test_render_cli PRIVATE dubl_core)
