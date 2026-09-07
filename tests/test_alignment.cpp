@@ -39,4 +39,13 @@ int main() {
     frame.voiced = false;
   }
   REQUIRE(dubl::alignFeatures(lead, unrelated, 30).overall_confidence < 0.70F);
+
+  auto silence = phrase(80);
+  for (auto& frame : silence) {
+    frame.rms = 0.0F;
+    frame.onset = 0.0F;
+    frame.f0_hz = 0.0F;
+    frame.voiced = false;
+  }
+  REQUIRE(dubl::alignFeatures(silence, silence, 30).overall_confidence < 0.70F);
 }

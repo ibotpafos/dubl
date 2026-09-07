@@ -19,6 +19,13 @@ float frameCost(const FrameFeature& lead, const FrameFeature& dub) {
   return 0.55F * onset + 0.30F * pitch + 0.15F * voicing;
 }
 
+float evidenceRatio(const std::span<const FrameFeature> frames) {
+  const auto informative = std::ranges::count_if(frames, [](const FrameFeature& frame) {
+    return frame.voiced || frame.rms >= 0.02F || frame.onset >= 0.05F;
+  });
+  return static_cast<float>(informative) / static_cast<float>(frames.size());
+}
+
 }  // namespace
 
 AlignmentResult alignFeatures(const std::span<const FrameFeature> lead,
@@ -87,7 +94,8 @@ AlignmentResult alignFeatures(const std::span<const FrameFeature> lead,
   std::ranges::reverse(result.points);
   const float mean_cost = cost[index(rows - 1, columns - 1)] /
                           static_cast<float>(result.points.size());
-  result.overall_confidence = 1.0F - std::min(1.0F, mean_cost);
+  const float evidence = std::min(evidenceRatio(lead), evidenceRatio(dub));
+  result.overall_confidence = (1.0F - std::min(1.0F, mean_cost)) * evidence;
   return result;
 }
 
