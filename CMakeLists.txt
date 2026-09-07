@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 enable_testing()
 
-add_library(dubl_core STATIC src/wav_reader.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp)
+add_library(dubl_core STATIC src/wav_reader.cpp src/wav_writer.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp src/time_renderer.cpp)
 target_include_directories(dubl_core PUBLIC include)
 
 add_executable(dubl_test_audio_buffer tests/test_audio_buffer.cpp)
@@ -17,6 +17,10 @@ add_test(NAME dubl_test_audio_buffer COMMAND dubl_test_audio_buffer)
 add_executable(dubl_test_wav_reader tests/test_wav_reader.cpp)
 target_link_libraries(dubl_test_wav_reader PRIVATE dubl_core)
 add_test(NAME dubl_test_wav_reader COMMAND dubl_test_wav_reader)
+
+add_executable(dubl_test_wav_writer tests/test_wav_writer.cpp)
+target_link_libraries(dubl_test_wav_writer PRIVATE dubl_core)
+add_test(NAME dubl_test_wav_writer COMMAND dubl_test_wav_writer)
 
 add_executable(dubl_test_features tests/test_features.cpp)
 target_link_libraries(dubl_test_features PRIVATE dubl_core)
@@ -30,9 +34,20 @@ add_executable(dubl_test_warp_plan tests/test_warp_plan.cpp)
 target_link_libraries(dubl_test_warp_plan PRIVATE dubl_core)
 add_test(NAME dubl_test_warp_plan COMMAND dubl_test_warp_plan)
 
+add_executable(dubl_test_time_renderer tests/test_time_renderer.cpp)
+target_link_libraries(dubl_test_time_renderer PRIVATE dubl_core)
+add_test(NAME dubl_test_time_renderer COMMAND dubl_test_time_renderer)
+
 add_executable(dubl_analyse apps/dubl_analyse.cpp)
 target_link_libraries(dubl_analyse PRIVATE dubl_core)
 
 add_executable(dubl_test_cli tests/test_cli.cpp)
 target_link_libraries(dubl_test_cli PRIVATE dubl_core)
 add_test(NAME dubl_test_cli COMMAND dubl_test_cli $<TARGET_FILE:dubl_analyse>)
+
+add_executable(dubl_render apps/dubl_render.cpp)
+target_link_libraries(dubl_render PRIVATE dubl_core)
+
+add_executable(dubl_test_render_cli tests/test_render_cli.cpp)
+target_link_libraries(dubl_test_render_cli PRIVATE dubl_core)
+add_test(NAME dubl_test_render_cli COMMAND dubl_test_render_cli $<TARGET_FILE:dubl_render>)

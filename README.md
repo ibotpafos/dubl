@@ -6,8 +6,10 @@ musical.
 
 ## Status
 
-**Design and benchmark preparation.** This repository does not yet ship a
-plug-in or claim audio quality. The first target is macOS Apple Silicon,
+**Working offline timing baseline.** The repository builds a command-line
+product that analyses a mono lead/double pair and safely writes a timing-aligned
+WAV plus a JSON report. It does not yet ship the Studio One plug-in or claim
+production vocal quality. The first plug-in target is macOS Apple Silicon,
 Studio One, and ARA VST3. v1 handles doubles with the same lyric as the lead;
 it deliberately does not attempt harmony alignment.
 
@@ -37,11 +39,11 @@ and [contribution guide](CONTRIBUTING.md). The project is GPL-3.0, including
 the initial public build path. Do not add actual vocal material without written
 consent and documented provenance.
 
-## P0 local core
+## Local core and offline renderer
 
-The current executable analyses a mono lead/double WAV pair and writes a
-versioned, path-safe JSON warp plan. It does not render audio or provide the
-Studio One plug-in yet.
+The analyser writes a versioned, path-safe JSON warp plan. The renderer applies
+the conservative timing map and publishes a new 16-bit PCM mono WAV atomically.
+Existing files and either input WAV are never overwritten.
 
 Requirements: macOS on Apple Silicon, AppleClang with C++20, and CMake 3.25 or
 newer.
@@ -65,6 +67,20 @@ Run the analyser with 16-bit PCM or 32-bit float mono WAV files at 44.1 or
 The report contains sample rates, frame counts, confidence, identity/safe point
 counts and the bounded warp map. It never contains input paths or waveform
 samples.
+
+Render a new aligned WAV and a compact machine-readable report:
+
+```bash
+./build/dubl_render \
+  --lead /path/to/lead.wav \
+  --double /path/to/double.wav \
+  --output /path/to/aligned.wav \
+  --report /path/to/render-report.json
+```
+
+The current renderer changes timing only. Pitch correction, formant protection,
+artifact detection, the trained on-device model and ARA/VST3 integration remain
+roadmap work; the JSON report states `"pitch_rendered": false` explicitly.
 
 ## Roadmap
 
