@@ -29,3 +29,10 @@ add_test(NAME dubl_test_alignment COMMAND dubl_test_alignment)
 add_executable(dubl_test_warp_plan tests/test_warp_plan.cpp)
 target_link_libraries(dubl_test_warp_plan PRIVATE dubl_core)
 add_test(NAME dubl_test_warp_plan COMMAND dubl_test_warp_plan)
+
+add_executable(dubl_analyse apps/dubl_analyse.cpp)
+target_link_libraries(dubl_analyse PRIVATE dubl_core)
+
+add_executable(dubl_test_cli tests/test_cli.cpp)
+target_link_libraries(dubl_test_cli PRIVATE dubl_core)
+add_test(NAME dubl_test_cli COMMAND dubl_test_cli $<TARGET_FILE:dubl_analyse>)
