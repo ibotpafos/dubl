@@ -89,6 +89,22 @@ mode, and evidence count.
 
 ## Roadmap
 
+## Native standalone preview
+
+Run `bash standalone/build-app.sh` on macOS, then open
+`build-standalone/DUBL.app`. The application bundles the offline engine and
+requires no DAW. Drop two or more mono WAV tracks into one DAW-style timeline,
+select the tracks to process, choose a mode and press Align All. The processed
+waveforms replace the originals in place; Before/After switches the whole
+session for instant comparison. Results save as a complete batch to a new
+folder, and existing destinations are not overwritten.
+
+This preview supports WAV drag-and-drop, individual playback and synchronized
+multitrack audition with a conservative mix gain. The first selected track is
+currently the internal alignment reference; there is no separate lead/output
+lane in the product UI. Processing remains the experimental timing/global-pitch
+baseline described above.
+
 1. Reproducible benchmark corpus and offline analysis prototype.
 2. Conservative alignment planner and renderer quality gates.
 3. Studio One ARA VST3 integration, A/B, Undo/Restore and regression suite.
