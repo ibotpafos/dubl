@@ -1,7 +1,7 @@
 #include <dubl/alignment.hpp>
+#include "test_support.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <vector>
 
 namespace {
@@ -25,11 +25,11 @@ int main() {
   auto delayed = phrase(80);
   for (auto& frame : delayed) frame.time_seconds += 0.03;
   const auto aligned = dubl::alignFeatures(lead, delayed, 30);
-  assert(!aligned.points.empty());
-  assert(aligned.overall_confidence > 0.90F);
+  REQUIRE(!aligned.points.empty());
+  REQUIRE(aligned.overall_confidence > 0.90F);
   for (std::size_t i = 1; i < aligned.points.size(); ++i) {
-    assert(aligned.points[i].double_frame >= aligned.points[i - 1].double_frame);
-    assert(aligned.points[i].lead_frame >= aligned.points[i - 1].lead_frame);
+    REQUIRE(aligned.points[i].double_frame >= aligned.points[i - 1].double_frame);
+    REQUIRE(aligned.points[i].lead_frame >= aligned.points[i - 1].lead_frame);
   }
 
   auto unrelated = phrase(80);
@@ -38,5 +38,5 @@ int main() {
     frame.f0_hz = 420.0F;
     frame.voiced = false;
   }
-  assert(dubl::alignFeatures(lead, unrelated, 30).overall_confidence < 0.70F);
+  REQUIRE(dubl::alignFeatures(lead, unrelated, 30).overall_confidence < 0.70F);
 }

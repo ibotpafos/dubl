@@ -1,9 +1,8 @@
 #include <dubl/audio_buffer.hpp>
-
-#include <cassert>
+#include "test_support.hpp"
 
 int main() {
-  assert(dubl::isSupportedSampleRate(44100));
-  assert(dubl::isSupportedSampleRate(48000));
-  assert(!dubl::isSupportedSampleRate(96000));
+  REQUIRE(dubl::isSupportedSampleRate(44100));
+  REQUIRE(dubl::isSupportedSampleRate(48000));
+  REQUIRE(!dubl::isSupportedSampleRate(96000));
 }

@@ -1,7 +1,7 @@
 #include <dubl/features.hpp>
+#include "test_support.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <numbers>
 #include <vector>
@@ -30,11 +30,11 @@ float medianVoicedF0(std::vector<dubl::FrameFeature> frames) {
 
 int main() {
   const auto frames = dubl::extractFeatures(sineBuffer(44100, 220.0F, 1.0F));
-  assert(std::ranges::count_if(frames, [](const auto& frame) { return frame.voiced; }) > 50);
-  assert(std::abs(medianVoicedF0(frames) - 220.0F) < 5.0F);
+  REQUIRE(std::ranges::count_if(frames, [](const auto& frame) { return frame.voiced; }) > 50);
+  REQUIRE(std::abs(medianVoicedF0(frames) - 220.0F) < 5.0F);
 
   dubl::AudioBuffer silence{.sample_rate = 44100, .samples = std::vector<float>(44100, 0.0F)};
   const auto silent_frames = dubl::extractFeatures(silence);
-  assert(!silent_frames.empty());
-  assert(std::ranges::none_of(silent_frames, [](const auto& frame) { return frame.voiced; }));
+  REQUIRE(!silent_frames.empty());
+  REQUIRE(std::ranges::none_of(silent_frames, [](const auto& frame) { return frame.voiced; }));
 }

@@ -1,4 +1,5 @@
-#include <cassert>
+#include "test_support.hpp"
+
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -52,7 +53,7 @@ std::string readAll(const std::filesystem::path& path) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  assert(argc == 2);
+  REQUIRE(argc == 2);
   const auto directory = std::filesystem::temp_directory_path() / "dubl-cli-test";
   std::filesystem::create_directories(directory);
   const auto lead = directory / "lead.wav";
@@ -64,13 +65,13 @@ int main(int argc, char** argv) {
   const std::string command = std::string{"\""} + argv[1] + "\" --lead \"" +
       lead.string() + "\" --double \"" + dub.string() + "\" --report \"" +
       report.string() + "\"";
-  assert(std::system(command.c_str()) == 0);
+  REQUIRE(std::system(command.c_str()) == 0);
   const auto json = readAll(report);
-  assert(json.find("\"schema_version\": 1") != std::string::npos);
-  assert(json.find("\"confidence\"") != std::string::npos);
-  assert(json.find("\"warp_points\"") != std::string::npos);
-  assert(json.find("\"input\"") != std::string::npos);
-  assert(json.find(directory.string()) == std::string::npos);
+  REQUIRE(json.find("\"schema_version\": 1") != std::string::npos);
+  REQUIRE(json.find("\"confidence\"") != std::string::npos);
+  REQUIRE(json.find("\"warp_points\"") != std::string::npos);
+  REQUIRE(json.find("\"input\"") != std::string::npos);
+  REQUIRE(json.find(directory.string()) == std::string::npos);
 
   std::filesystem::remove_all(directory);
 }

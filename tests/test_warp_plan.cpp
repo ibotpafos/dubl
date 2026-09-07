@@ -1,7 +1,7 @@
 #include <dubl/warp_plan.hpp>
+#include "test_support.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <vector>
 
 namespace {
@@ -34,16 +34,16 @@ int main() {
   const auto dub = features(200.0F, 0.02);
 
   const auto unsafe = dubl::makeSafeWarpPlan(alignment(0.50F), lead, dub);
-  assert(!unsafe.points.empty());
-  assert(std::ranges::all_of(unsafe.points,
+  REQUIRE(!unsafe.points.empty());
+  REQUIRE(std::ranges::all_of(unsafe.points,
                              [](const auto& point) { return point.identity; }));
 
   const auto safe = dubl::makeSafeWarpPlan(alignment(0.95F), lead, dub);
-  assert(std::ranges::is_sorted(safe.points, {}, &dubl::WarpPoint::source_seconds));
-  assert(std::ranges::is_sorted(safe.points, {}, &dubl::WarpPoint::target_seconds));
-  assert(std::ranges::all_of(safe.points, [](const auto& point) {
+  REQUIRE(std::ranges::is_sorted(safe.points, {}, &dubl::WarpPoint::source_seconds));
+  REQUIRE(std::ranges::is_sorted(safe.points, {}, &dubl::WarpPoint::target_seconds));
+  REQUIRE(std::ranges::all_of(safe.points, [](const auto& point) {
     return point.pitch_ratio >= 0.9439F && point.pitch_ratio <= 1.0595F;
   }));
-  assert(safe.points.front().source_seconds == safe.points.front().target_seconds);
-  assert(safe.points.back().source_seconds == safe.points.back().target_seconds);
+  REQUIRE(safe.points.front().source_seconds == safe.points.front().target_seconds);
+  REQUIRE(safe.points.back().source_seconds == safe.points.back().target_seconds);
 }

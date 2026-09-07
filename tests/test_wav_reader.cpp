@@ -1,6 +1,6 @@
 #include <dubl/wav_reader.hpp>
+#include "test_support.hpp"
 
-#include <cassert>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -50,11 +50,11 @@ int main() {
   const auto high_rate = writePcm16Wav("dubl-high-rate.wav", {0}, 96000, 1);
 
   const auto valid_result = dubl::loadMonoWav(valid);
-  assert(valid_result.audio.has_value());
-  assert(valid_result.audio->samples.size() == 2);
-  assert(valid_result.audio->samples[1] > 0.99F);
-  assert(dubl::loadMonoWav(stereo).error == dubl::WavError::unsupported_channels);
-  assert(dubl::loadMonoWav(high_rate).error == dubl::WavError::unsupported_sample_rate);
+  REQUIRE(valid_result.audio.has_value());
+  REQUIRE(valid_result.audio->samples.size() == 2);
+  REQUIRE(valid_result.audio->samples[1] > 0.99F);
+  REQUIRE(dubl::loadMonoWav(stereo).error == dubl::WavError::unsupported_channels);
+  REQUIRE(dubl::loadMonoWav(high_rate).error == dubl::WavError::unsupported_sample_rate);
 
   std::filesystem::remove(valid);
   std::filesystem::remove(stereo);
