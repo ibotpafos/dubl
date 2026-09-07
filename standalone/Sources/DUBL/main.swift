@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
     @Published var status = "Выберите лид и дубль: mono WAV, 44.1 или 48 kHz."
     @Published var results: [URL] = []
     private var player: AVAudioPlayer?
+    private var ensemble: [AVAudioPlayer] = []
 
     func choose(leadTrack: Bool) {
         let panel = NSOpenPanel()
@@ -19,15 +20,27 @@ import UniformTypeIdentifiers
         if panel.runModal() == .OK {
             if leadTrack { lead = panel.url } else { doubles = panel.urls }
             results = []
-            player?.stop()
+            stop()
         }
     }
     func play(_ url: URL?) {
         guard let url else { return }
-        do { player?.stop(); player = try AVAudioPlayer(contentsOf: url); player?.play() }
+        do { stop(); player = try AVAudioPlayer(contentsOf: url); player?.play() }
         catch { status = error.localizedDescription }
     }
-    func stop() { player?.stop() }
+    func stop() { player?.stop(); ensemble.forEach { $0.stop() }; ensemble = [] }
+    func playAll(processed: Bool) {
+        let tracks = (lead.map { [$0] } ?? []) + (processed ? results : doubles)
+        guard !tracks.isEmpty else { return }
+        do {
+            stop()
+            ensemble = try tracks.map { try AVAudioPlayer(contentsOf: $0) }
+            let gain = 1.0 / Float(ensemble.count)
+            ensemble.forEach { $0.volume = gain; $0.prepareToPlay() }
+            let time = ensemble[0].deviceCurrentTime + 0.15
+            ensemble.forEach { $0.play(atTime: time) }
+        } catch { stop(); status = error.localizedDescription }
+    }
     func align() {
         guard let lead, !doubles.isEmpty, !busy else { return }
         let tracks = doubles
@@ -38,7 +51,7 @@ import UniformTypeIdentifiers
         }
         busy = true
         results = []
-        player?.stop()
+        stop()
         status = "Анализ и выравнивание…"
         let selectedMode = mode
         Task {
@@ -118,6 +131,8 @@ struct Content: View {
                 .buttonStyle(.borderedProminent).controlSize(.large)
                 .disabled(session.busy || session.lead == nil || session.doubles.isEmpty)
             HStack {
+                Button("Все до") { session.playAll(processed: false) }.disabled(session.doubles.isEmpty)
+                Button("Все после") { session.playAll(processed: true) }.disabled(session.results.isEmpty)
                 Button("Стоп") { session.stop() }
                 Spacer()
                 Button("Сохранить все WAV") { session.save() }.disabled(session.results.isEmpty)

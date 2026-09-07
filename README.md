@@ -97,8 +97,8 @@ requires no DAW. Select one mono WAV lead and multiple mono WAV doubles, choose
 a mode and press Align All. Audition each original/result and save the complete
 batch to a new folder. Existing destinations are not overwritten.
 
-This preview currently supports individual audition; synchronized multitrack
-audition and drag-and-drop are still pending. The processing remains the same
+This preview supports individual and scheduled multitrack audition with a
+conservative mix gain. Drag-and-drop is still pending. The processing remains the same
 experimental timing/global-pitch baseline described above.
 
 1. Reproducible benchmark corpus and offline analysis prototype.
