@@ -38,5 +38,8 @@ jobs:
       - name: Test processor state and pass-through
         run: ctest --test-dir build-plugin -R dubl_test_plugin --output-on-failure
       - name: Verify bundle architecture
-        run: >-
-          test "$(lipo -archs build-plugin/DUBL_artefacts/Release/VST3/DUBL.vst3/Contents/MacOS/DUBL)" = arm64
+        run: |
+          plugin=build-plugin/DUBL_artefacts/Release/VST3/DUBL.vst3
+          test "$(lipo -archs "$plugin/Contents/MacOS/DUBL")" = arm64
+          grep -q "ARA Main Factory Class" "$plugin/Contents/Resources/moduleinfo.json"
+          codesign --verify --deep --strict --verbose=2 "$plugin"
