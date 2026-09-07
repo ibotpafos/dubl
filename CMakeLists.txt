@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 enable_testing()
 
-add_library(dubl_core STATIC src/wav_reader.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp)
+add_library(dubl_core STATIC src/wav_reader.cpp src/wav_writer.cpp src/features.cpp src/alignment.cpp src/warp_plan.cpp)
 target_include_directories(dubl_core PUBLIC include)
 
 add_executable(dubl_test_audio_buffer tests/test_audio_buffer.cpp)
@@ -17,6 +17,10 @@ add_test(NAME dubl_test_audio_buffer COMMAND dubl_test_audio_buffer)
 add_executable(dubl_test_wav_reader tests/test_wav_reader.cpp)
 target_link_libraries(dubl_test_wav_reader PRIVATE dubl_core)
 add_test(NAME dubl_test_wav_reader COMMAND dubl_test_wav_reader)
+
+add_executable(dubl_test_wav_writer tests/test_wav_writer.cpp)
+target_link_libraries(dubl_test_wav_writer PRIVATE dubl_core)
+add_test(NAME dubl_test_wav_writer COMMAND dubl_test_wav_writer)
 
 add_executable(dubl_test_features tests/test_features.cpp)
 target_link_libraries(dubl_test_features PRIVATE dubl_core)
