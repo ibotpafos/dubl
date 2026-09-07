@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash standalone/build-app.sh
+      - name: Strict Swift concurrency diagnostics
+        run: swift build --package-path standalone -Xswiftc -strict-concurrency=complete -Xswiftc -warn-concurrency
       - name: Four-double processing and rollback
         run: |
           swiftc standalone/Sources/DUBL/BatchRenderer.swift standalone/Tests/DUBLTests/BatchTests.swift -o build-standalone/batch-test

@@ -13,7 +13,10 @@ func XCTAssertThrowsError<T>(_ operation: @autoclosure () throws -> T) {
         let engine = URL(fileURLWithPath: enginePath)
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
-        defer { try? FileManager.default.removeItem(at: root) }
+        defer {
+            if ProcessInfo.processInfo.environment["DUBL_KEEP_FIXTURES"] == "1" { print("Fixtures: \(root.path)") }
+            else { try? FileManager.default.removeItem(at: root) }
+        }
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 48000, channels: 1))
         var tracks: [URL] = []
         for index in 0..<5 {
