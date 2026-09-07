@@ -58,24 +58,7 @@ import UniformTypeIdentifiers
             let outcome: Result<[URL], Error> = await Task.detached {
                 do {
                     let directory = FileManager.default.temporaryDirectory.appendingPathComponent("dubl-" + UUID().uuidString)
-                    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-                    var outputs: [URL] = []
-                    for (index, double) in tracks.enumerated() {
-                    let output = directory.appendingPathComponent("\(index + 1)-\(double.deletingPathExtension().lastPathComponent)-aligned.wav")
-                    let process = Process()
-                    process.executableURL = engine
-                    process.arguments = ["--lead", lead.path, "--double", double.path, "--output", output.path, "--report", directory.appendingPathComponent("report-\(index).json").path, "--mode", selectedMode]
-                    let errors = Pipe()
-                    process.standardError = errors
-                    try process.run()
-                    let data = errors.fileHandleForReading.readDataToEndOfFile()
-                    process.waitUntilExit()
-                    guard process.terminationStatus == 0 else {
-                        throw NSError(domain: "DUBL", code: Int(process.terminationStatus), userInfo: [NSLocalizedDescriptionKey: String(data: data, encoding: .utf8) ?? "Ошибка обработки"])
-                    }
-                    outputs.append(output)
-                    }
-                    return .success(outputs)
+                    return .success(try BatchRenderer.render(engine: engine, lead: lead, doubles: tracks, mode: selectedMode, directory: directory))
                 } catch { return .failure(error) }
             }.value
             busy = false
