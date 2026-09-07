@@ -103,12 +103,37 @@ import UniformTypeIdentifiers
 
 struct Content: View {
     @StateObject private var session = Session()
+    private func acceptDrop(_ providers: [NSItemProvider], leadTrack: Bool) -> Bool {
+        guard !session.busy else { return false }
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                let url: URL?
+                if let data = item as? Data { url = URL(dataRepresentation: data, relativeTo: nil) }
+                else { url = item as? URL }
+                guard let url, url.pathExtension.lowercased() == "wav" else { return }
+                Task { @MainActor in
+                    guard !session.busy else { return }
+                    session.stop()
+                    if leadTrack { session.lead = url }
+                    else if !session.doubles.contains(url) { session.doubles.append(url) }
+                    session.results = []
+                }
+            }
+            if leadTrack { break }
+        }
+        return true
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             Text("ДУБЛЬ").font(.system(size: 38, weight: .bold, design: .rounded))
             Text("Выравнивание вокальных дублей · локально на Mac").foregroundStyle(.secondary)
             Group {
-                Button("Лид: " + (session.lead?.lastPathComponent ?? "выбрать WAV")) { session.choose(leadTrack: true) }
+                HStack {
+                    Text("ЛИД").font(.caption.bold()).foregroundStyle(.mint)
+                    Button(session.lead?.lastPathComponent ?? "Перетащите лид сюда или выберите WAV") { session.choose(leadTrack: true) }
+                    Spacer()
+                }.padding(18).background(.mint.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                    .onDrop(of: [UTType.fileURL.identifier], isTargeted: nil) { acceptDrop($0, leadTrack: true) }
                 Button("Выбрать дубли (\(session.doubles.count))") { session.choose(leadTrack: false) }
                 Picker("Режим", selection: $session.mode) {
                     Text("Natural").tag("natural")
@@ -116,17 +141,24 @@ struct Content: View {
                     Text("Locked").tag("locked")
                 }.pickerStyle(.segmented)
             }.disabled(session.busy)
+            if let lead = session.lead { Waveform(url: lead) }
             ScrollView {
                 ForEach(Array(session.doubles.enumerated()), id: \.offset) { index, url in
                     HStack {
+                        Text("\(index + 1)").foregroundStyle(.mint).frame(width: 24)
                         Text(url.lastPathComponent).lineLimit(1)
+                        Waveform(url: url).frame(minWidth: 120)
                         Spacer()
                         Button("Оригинал") { session.play(url) }
                         Button("Результат") { session.play(session.results[index]) }
                             .disabled(index >= session.results.count)
-                    }
+                    }.padding(14).background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
                 }
-            }.frame(height: 120)
+                Text("Перетащите WAV-дубли сюда — можно несколько сразу")
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(24)
+            }.frame(height: 220)
+                .background(.secondary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                .onDrop(of: [UTType.fileURL.identifier], isTargeted: nil) { acceptDrop($0, leadTrack: false) }
             Button(session.busy ? "Обработка…" : "Выровнять всё") { session.align() }
                 .buttonStyle(.borderedProminent).controlSize(.large)
                 .disabled(session.busy || session.lead == nil || session.doubles.isEmpty)
