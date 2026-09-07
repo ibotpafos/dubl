@@ -44,3 +44,10 @@ target_link_libraries(dubl_analyse PRIVATE dubl_core)
 add_executable(dubl_test_cli tests/test_cli.cpp)
 target_link_libraries(dubl_test_cli PRIVATE dubl_core)
 add_test(NAME dubl_test_cli COMMAND dubl_test_cli $<TARGET_FILE:dubl_analyse>)
+
+add_executable(dubl_render apps/dubl_render.cpp)
+target_link_libraries(dubl_render PRIVATE dubl_core)
+
+add_executable(dubl_test_render_cli tests/test_render_cli.cpp)
+target_link_libraries(dubl_test_render_cli PRIVATE dubl_core)
+add_test(NAME dubl_test_render_cli COMMAND dubl_test_render_cli $<TARGET_FILE:dubl_render>)
