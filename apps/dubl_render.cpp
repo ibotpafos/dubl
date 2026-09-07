@@ -1,5 +1,7 @@
 #include <dubl/alignment.hpp>
 #include <dubl/features.hpp>
+#include <dubl/pitch_decision.hpp>
+#include <dubl/pitch_renderer.hpp>
 #include <dubl/time_renderer.hpp>
 #include <dubl/warp_plan.hpp>
 #include <dubl/wav_reader.hpp>
@@ -11,6 +13,8 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <string_view>
 
@@ -21,11 +25,13 @@ struct Arguments {
   std::filesystem::path dub;
   std::filesystem::path output;
   std::filesystem::path report;
+  dubl::PitchMode mode{dubl::PitchMode::natural};
+  std::string mode_name{"natural"};
 };
 
 std::optional<Arguments> parseArguments(int argc, char** argv) {
   Arguments parsed;
-  bool lead = false, dub = false, output = false, report = false;
+  bool lead = false, dub = false, output = false, report = false, mode = false;
   for (int i = 1; i < argc; i += 2) {
     if (i + 1 >= argc) return std::nullopt;
     const std::string_view flag = argv[i];
@@ -37,6 +43,13 @@ std::optional<Arguments> parseArguments(int argc, char** argv) {
       parsed.output = argv[i + 1]; output = true;
     } else if (flag == "--report" && !report) {
       parsed.report = argv[i + 1]; report = true;
+    } else if (flag == "--mode" && !mode) {
+      parsed.mode_name = argv[i + 1];
+      if (parsed.mode_name == "natural") parsed.mode = dubl::PitchMode::natural;
+      else if (parsed.mode_name == "tight") parsed.mode = dubl::PitchMode::tight;
+      else if (parsed.mode_name == "locked") parsed.mode = dubl::PitchMode::locked;
+      else return std::nullopt;
+      mode = true;
     } else {
       return std::nullopt;
     }
@@ -59,7 +72,9 @@ bool pathsAreSafe(const Arguments& arguments) {
 }
 
 bool writeReport(const std::filesystem::path& path, const dubl::WarpPlan& plan,
-                 std::size_t sample_count) {
+                 std::size_t sample_count,
+                 const dubl::PitchCorrection& pitch,
+                 const std::string_view mode) {
   const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
   const auto temporary = path.parent_path() /
       ("." + path.filename().string() + ".dubl-tmp-" + std::to_string(stamp));
@@ -69,8 +84,11 @@ bool writeReport(const std::filesystem::path& path, const dubl::WarpPlan& plan,
   for (const auto& point : plan.points) if (point.identity) ++identity_count;
   stream << std::fixed << std::setprecision(6)
          << "{\n  \"schema_version\": 1,\n"
-         << "  \"renderer\": \"timing-linear-v1\",\n"
-         << "  \"pitch_rendered\": false,\n"
+         << "  \"renderer\": \"timing-linear+signalsmith-v1\",\n"
+         << "  \"pitch_rendered\": " << (pitch.applied ? "true" : "false") << ",\n"
+         << "  \"mode\": \"" << mode << "\",\n"
+         << "  \"pitch_factor\": " << pitch.factor << ",\n"
+         << "  \"pitch_evidence_points\": " << pitch.evidence_points << ",\n"
          << "  \"confidence\": " << plan.confidence << ",\n"
          << "  \"sample_count\": " << sample_count << ",\n"
          << "  \"warp_point_count\": " << plan.points.size() << ",\n"
@@ -90,13 +108,27 @@ bool writeReport(const std::filesystem::path& path, const dubl::WarpPlan& plan,
   return !publish_error;
 }
 
+float medianVoicedPitch(const std::vector<dubl::FrameFeature>& features) {
+  std::vector<float> pitches;
+  for (const auto& frame : features) {
+    if (frame.voiced && std::isfinite(frame.f0_hz) && frame.f0_hz > 0.0F) {
+      pitches.push_back(frame.f0_hz);
+    }
+  }
+  if (pitches.empty()) return 180.0F;
+  const auto middle = pitches.begin() + static_cast<std::ptrdiff_t>(pitches.size() / 2);
+  std::nth_element(pitches.begin(), middle, pitches.end());
+  return *middle;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
   const auto arguments = parseArguments(argc, argv);
   if (!arguments) {
     std::cerr << "usage: dubl_render --lead lead.wav --double double.wav "
-                 "--output aligned.wav --report report.json\n";
+                 "--output aligned.wav --report report.json "
+                 "[--mode natural|tight|locked]\n";
     return 2;
   }
   if (!pathsAreSafe(*arguments)) {
@@ -121,21 +153,29 @@ int main(int argc, char** argv) {
   }
   const auto alignment = dubl::alignFeatures(lead_features, dub_features);
   const auto plan = dubl::makeSafeWarpPlan(alignment, lead_features, dub_features);
-  const auto rendered = dubl::renderTimeWarp(*dub.audio, plan);
-  if (!rendered.audio) {
+  const auto timed = dubl::renderTimeWarp(*dub.audio, plan);
+  if (!timed.audio) {
     std::cerr << "unable to render a safe time map\n";
     return 7;
   }
-  if (dubl::writeMonoPcm16Wav(arguments->output, *rendered.audio).error !=
-      dubl::WavWriteError::none) {
-    std::cerr << "unable to publish output WAV\n";
+  const auto correction = dubl::choosePitchCorrection(plan, arguments->mode);
+  const auto pitched = dubl::renderPitch(*timed.audio, correction.factor,
+                                         medianVoicedPitch(dub_features));
+  if (!pitched.audio) {
+    std::cerr << "unable to render safe pitch correction\n";
     return 8;
   }
-  if (!writeReport(arguments->report, plan, rendered.audio->samples.size())) {
+  if (dubl::writeMonoPcm16Wav(arguments->output, *pitched.audio).error !=
+      dubl::WavWriteError::none) {
+    std::cerr << "unable to publish output WAV\n";
+    return 9;
+  }
+  if (!writeReport(arguments->report, plan, pitched.audio->samples.size(),
+                   correction, arguments->mode_name)) {
     std::error_code ignored;
     std::filesystem::remove(arguments->output, ignored);
     std::cerr << "unable to publish report\n";
-    return 9;
+    return 10;
   }
   return 0;
 }

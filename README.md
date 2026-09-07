@@ -7,8 +7,8 @@ musical.
 ## Status
 
 **Working offline timing baseline.** The repository builds a command-line
-product that analyses a mono lead/double pair and safely writes a timing-aligned
-WAV plus a JSON report. It does not yet ship the Studio One plug-in or claim
+product that analyses a mono lead/double pair and safely writes a timing- and
+globally pitch-aligned WAV plus a JSON report. It does not yet ship the Studio One plug-in or claim
 production vocal quality. The first plug-in target is macOS Apple Silicon,
 Studio One, and ARA VST3. v1 handles doubles with the same lyric as the lead;
 it deliberately does not attempt harmony alignment.
@@ -42,7 +42,8 @@ consent and documented provenance.
 ## Local core and offline renderer
 
 The analyser writes a versioned, path-safe JSON warp plan. The renderer applies
-the conservative timing map and publishes a new 16-bit PCM mono WAV atomically.
+the conservative timing map, a confidence-gated pitch correction with formant
+compensation, and publishes a new 16-bit PCM mono WAV atomically.
 Existing files and either input WAV are never overwritten.
 
 Requirements: macOS on Apple Silicon, AppleClang with C++20, and CMake 3.25 or
@@ -75,12 +76,16 @@ Render a new aligned WAV and a compact machine-readable report:
   --lead /path/to/lead.wav \
   --double /path/to/double.wav \
   --output /path/to/aligned.wav \
-  --report /path/to/render-report.json
+  --report /path/to/render-report.json \
+  --mode natural
 ```
 
-The current renderer changes timing only. Pitch correction, formant protection,
-artifact detection, the trained on-device model and ARA/VST3 integration remain
-roadmap work; the JSON report states `"pitch_rendered": false` explicitly.
+Modes are `natural` (default), `tight`, and `locked`. Pitch is currently one
+bounded global correction derived from confident aligned voiced frames; uncertain
+material remains unchanged. Time-varying note correction, learned artifact
+detection, the trained on-device model and ARA/VST3 integration remain roadmap
+work. The JSON report records whether pitch was actually applied, the factor,
+mode, and evidence count.
 
 ## Roadmap
 
@@ -92,3 +97,4 @@ roadmap work; the JSON report states `"pitch_rendered": false` explicitly.
 ## Licence
 
 [GPL-3.0](LICENSE).
+See [third-party notices](THIRD_PARTY_NOTICES.md) for MIT-licensed DSP dependencies.
