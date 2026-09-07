@@ -37,6 +37,35 @@ and [contribution guide](CONTRIBUTING.md). The project is GPL-3.0, including
 the initial public build path. Do not add actual vocal material without written
 consent and documented provenance.
 
+## P0 local core
+
+The current executable analyses a mono lead/double WAV pair and writes a
+versioned, path-safe JSON warp plan. It does not render audio or provide the
+Studio One plug-in yet.
+
+Requirements: macOS on Apple Silicon, AppleClang with C++20, and CMake 3.25 or
+newer.
+
+```bash
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+Run the analyser with 16-bit PCM or 32-bit float mono WAV files at 44.1 or
+48 kHz:
+
+```bash
+./build/dubl_analyse \
+  --lead /path/to/lead.wav \
+  --double /path/to/double.wav \
+  --report /path/to/report.json
+```
+
+The report contains sample rates, frame counts, confidence, identity/safe point
+counts and the bounded warp map. It never contains input paths or waveform
+samples.
+
 ## Roadmap
 
 1. Reproducible benchmark corpus and offline analysis prototype.
