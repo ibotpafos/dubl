@@ -83,6 +83,16 @@ if(DUBL_BUILD_PLUGIN)
   )
   FetchContent_MakeAvailable(juce)
 
+  FetchContent_Declare(
+    ara_sdk
+    GIT_REPOSITORY https://github.com/Celemony/ARA_SDK.git
+    GIT_TAG 0005c532bb03eb210e7bb490329fc6d7ba1792c7
+    GIT_SHALLOW OFF
+    GIT_SUBMODULES_RECURSE TRUE
+  )
+  FetchContent_MakeAvailable(ara_sdk)
+  juce_set_ara_sdk_path(${ara_sdk_SOURCE_DIR})
+
   juce_add_plugin(DUBL
     COMPANY_NAME "DUBL Open Source"
     BUNDLE_ID "org.dubl.audio.plugin"
@@ -90,10 +100,15 @@ if(DUBL_BUILD_PLUGIN)
     PLUGIN_CODE Dbl1
     FORMATS VST3
     PRODUCT_NAME "DUBL"
+    IS_ARA_EFFECT TRUE
+    ARA_FACTORY_ID "\"org.dubl.audio.factory.1\""
+    ARA_DOCUMENT_ARCHIVE_ID "\"org.dubl.audio.archive.1\""
     COPY_PLUGIN_AFTER_BUILD FALSE
   )
   target_sources(DUBL PRIVATE plugin/DublProcessor.cpp plugin/DublProcessor.hpp
-                              plugin/DublEditor.cpp plugin/DublEditor.hpp)
+                              plugin/DublEditor.cpp plugin/DublEditor.hpp
+                              plugin/DublAraStatus.cpp plugin/DublAraStatus.hpp
+                              plugin/DublAraController.cpp plugin/DublAraController.hpp)
   target_compile_definitions(DUBL PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
                                          JUCE_VST3_CAN_REPLACE_VST2=0)
   target_link_libraries(DUBL PRIVATE dubl_rendering juce::juce_audio_utils
@@ -101,12 +116,19 @@ if(DUBL_BUILD_PLUGIN)
                               PUBLIC juce::juce_recommended_config_flags
                                      juce::juce_recommended_lto_flags
                                      juce::juce_recommended_warning_flags)
+  if(APPLE)
+    add_custom_command(TARGET DUBL_VST3 POST_BUILD
+      COMMAND codesign --force --deep --sign - "$<TARGET_BUNDLE_DIR:DUBL_VST3>"
+      COMMENT "Applying final ad-hoc signature after VST3 manifest generation")
+  endif()
 
   add_executable(dubl_test_plugin tests/test_plugin_processor.cpp
                                   plugin/DublProcessor.cpp
                                   plugin/DublProcessor.hpp
                                   plugin/DublEditor.cpp
-                                  plugin/DublEditor.hpp)
+                                  plugin/DublEditor.hpp
+                                  plugin/DublAraStatus.cpp
+                                  plugin/DublAraStatus.hpp)
   target_include_directories(dubl_test_plugin PRIVATE plugin tests)
   target_compile_definitions(dubl_test_plugin PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
                                                       JUCE_VST3_CAN_REPLACE_VST2=0)

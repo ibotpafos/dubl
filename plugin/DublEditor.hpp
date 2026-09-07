@@ -4,7 +4,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-class DublEditor final : public juce::AudioProcessorEditor {
+class DublEditor final : public juce::AudioProcessorEditor, private juce::Timer {
  public:
   explicit DublEditor(DublProcessor&);
   void paint(juce::Graphics&) override;
@@ -17,4 +17,5 @@ class DublEditor final : public juce::AudioProcessorEditor {
   juce::TextButton align{"ALIGN"};
   juce::Label status;
   std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> attachment;
+  void timerCallback() override;
 };

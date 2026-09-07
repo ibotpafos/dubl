@@ -1,9 +1,13 @@
 #include "DublProcessor.hpp"
+#include "DublAraStatus.hpp"
 #include "test_support.hpp"
 
 #include <cmath>
 
 int main() {
+  const auto sources_before = DublAraStatus::audioSourcesObserved();
+  DublAraStatus::observedAudioSource();
+  REQUIRE(DublAraStatus::audioSourcesObserved() == sources_before + 1);
   DublProcessor processor;
   processor.prepareToPlay(48000.0, 128);
   juce::AudioBuffer<float> audio(2, 128);

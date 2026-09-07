@@ -1,5 +1,7 @@
 #include "DublEditor.hpp"
 
+#include "DublAraStatus.hpp"
+
 DublEditor::DublEditor(DublProcessor& plugin_owner)
     : AudioProcessorEditor(plugin_owner), owner(plugin_owner) {
   title.setText(juce::CharPointer_UTF8("ДУБЛЬ"), juce::dontSendNotification);
@@ -11,13 +13,28 @@ DublEditor::DublEditor(DublProcessor& plugin_owner)
   attachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
       owner.state, "mode", mode);
   align.onClick = [this] {
-    status.setText("ARA event access is the next milestone", juce::dontSendNotification);
+    timerCallback();
   };
   addAndMakeVisible(align);
-  status.setText("Select a mode, then Align", juce::dontSendNotification);
+  status.setText("ARA enabled - waiting for a Studio One event",
+                 juce::dontSendNotification);
   status.setJustificationType(juce::Justification::centred);
   addAndMakeVisible(status);
   setSize(420, 240);
+  startTimerHz(4);
+}
+
+void DublEditor::timerCallback() {
+  const auto sources = DublAraStatus::audioSourcesObserved();
+  const auto regions = DublAraStatus::playbackRegionsObserved();
+  if (sources == 0) {
+    status.setText("ARA enabled - waiting for a Studio One event",
+                   juce::dontSendNotification);
+    return;
+  }
+  status.setText("ARA ready: " + juce::String(sources) + " source(s), " +
+                     juce::String(regions) + " region(s)",
+                 juce::dontSendNotification);
 }
 
 void DublEditor::paint(juce::Graphics& graphics) {

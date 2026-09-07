@@ -111,10 +111,15 @@ The bundle is written to
 `build-plugin/DUBL_artefacts/Release/VST3/DUBL.vst3`. Copy it to
 `~/Library/Audio/Plug-Ins/VST3/` and rescan plug-ins in Studio One.
 
-This milestone is intentionally an audio-safe pass-through shell: its mode
-parameter persists and its one-button interface loads, but the Align button
-does not yet receive or replace Studio One event audio. That requires the next
-ARA document-controller milestone; use `dubl_render` for actual alignment now.
+The shell now exports an ARA 2.3 factory and records whether a host has created
+ARA audio sources and playback regions. Its status line distinguishes ordinary
+VST3 loading from real ARA event access. It remains audio-safe pass-through and
+does not yet replace host event audio; use `dubl_render` for actual alignment.
+
+The installed bundle was discovered locally by Fender Studio Pro as DUBL VST3
+0.1.0 without blacklisting. PreSonus Studio One is not installed on the current
+development Mac, so Studio One Event FX discovery and lifecycle remain an
+external host gate rather than a completed claim.
 
 ## Licence
 

@@ -17,3 +17,9 @@ The optional VST3 build fetches JUCE 8.0.14 at commit
 AGPLv3 open-source option. DUBL's own sources remain GPLv3; distribution of the
 combined plug-in must also satisfy JUCE's AGPLv3 terms. See the complete JUCE
 license in the fetched source.
+
+## ARA SDK
+
+The ARA-enabled plug-in build fetches Celemony's ARA SDK 2.3.0 at commit
+`0005c532bb03eb210e7bb490329fc6d7ba1792c7`, including its official submodules.
+Licenses and notices for ARA components are retained in the fetched source.
