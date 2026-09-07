@@ -94,6 +94,28 @@ mode, and evidence count.
 3. Studio One ARA VST3 integration, A/B, Undo/Restore and regression suite.
 4. Public macOS build, then Windows only after the quality gates hold.
 
+## Experimental macOS VST3 shell
+
+Build the Apple Silicon plug-in shell explicitly:
+
+```bash
+cmake -S . -B build-plugin \
+  -DDUBL_BUILD_PLUGIN=ON \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_OSX_ARCHITECTURES=arm64
+cmake --build build-plugin --target DUBL_VST3 --parallel
+ctest --test-dir build-plugin -R dubl_test_plugin --output-on-failure
+```
+
+The bundle is written to
+`build-plugin/DUBL_artefacts/Release/VST3/DUBL.vst3`. Copy it to
+`~/Library/Audio/Plug-Ins/VST3/` and rescan plug-ins in Studio One.
+
+This milestone is intentionally an audio-safe pass-through shell: its mode
+parameter persists and its one-button interface loads, but the Align button
+does not yet receive or replace Studio One event audio. That requires the next
+ARA document-controller milestone; use `dubl_render` for actual alignment now.
+
 ## Licence
 
 [GPL-3.0](LICENSE).

@@ -22,3 +22,21 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  macos-vst3:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Apple Silicon VST3
+        run: >-
+          cmake -S . -B build-plugin
+          -DDUBL_BUILD_PLUGIN=ON
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+      - name: Build VST3 and processor test
+        run: cmake --build build-plugin --target DUBL_VST3 dubl_test_plugin --parallel
+      - name: Test processor state and pass-through
+        run: ctest --test-dir build-plugin -R dubl_test_plugin --output-on-failure
+      - name: Verify bundle architecture
+        run: >-
+          test "$(lipo -archs build-plugin/DUBL_artefacts/Release/VST3/DUBL.vst3/Contents/MacOS/DUBL)" = arm64
